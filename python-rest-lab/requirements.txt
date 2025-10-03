@@ -1,0 +1,9 @@
+# REST API 阶段依赖
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# HTTP客户端工具（用于测试API）
+requests==2.31.0
+
+# 开发和测试工具
+pytest==7.4.0

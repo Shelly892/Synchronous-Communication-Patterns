@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  # gRPC Service
+  python-grpc-service:
+    build: ./python-grpc-lab
+    ports:
+      - "50051:50051"
+
+  # REST API Service
+  python-rest-service:
+    build: ./python-rest-lab
+    ports:
+      - "5000:5000"
+
+  # Socket Service
+  python-socket-service:
+    build: ./python-socket-lab
+    ports:
+      - "8080:8080"
