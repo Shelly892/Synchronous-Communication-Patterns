@@ -17,7 +17,8 @@ COPY . .
 EXPOSE 5000
 
 # Set environment variables
-ENV FLASK_APP=app.py
+ENV RUN_MODE=app
 
 # Default command to run Flask application
-CMD ["python", "app.py"]
+# CMD ["python", "app.py"]
+CMD ["sh", "-c", "python ${RUN_MODE}.py"]

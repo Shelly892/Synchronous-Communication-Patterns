@@ -8,9 +8,16 @@ import json
 import statistics
 
 # Import gRPC generated code
-sys.path.append('./python-grpc-lab/generated')
-import user_service_pb2
-import user_service_pb2_grpc
+try:
+    # Try container path first
+    sys.path.append('./generated')
+    import user_service_pb2
+    import user_service_pb2_grpc
+except ImportError:
+    # Fallback to local development path
+    sys.path.append('./python-grpc-lab/generated')
+    import user_service_pb2
+    import user_service_pb2_grpc
 
 def benchmark_socket(iterations=50):
     """Benchmark Socket performance"""
@@ -169,9 +176,9 @@ def benchmark_grpc(iterations=50):
 
 def compare_results(socket_time, rest_time, grpc_time):
     """Compare results from all three methods"""
-    print(f"\n{'='*60}")
+    print(f"\n{'='*50}")
     print("Performance Comparison Summary")
-    print('='*60)
+    print('='*50)
     
     results = []
     if socket_time is not None:
@@ -199,12 +206,7 @@ def compare_results(socket_time, rest_time, grpc_time):
             ratio = avg_time / fastest_time
             slower_percent = (ratio - 1) * 100
             print(f"{rank}. {method:<10} {avg_time:>8.2f}ms ({slower_percent:.0f}% slower)")
-    
-    # print(f"\nRecommendations:")
-    # print("-" * 40)
-    # print("Socket:  Best for high-performance, low-level control")
-    # print("REST:    Best for web APIs, standard HTTP communication")
-    # print("gRPC:    Best for microservices, type-safe communication")
+
 
 def main():
     """Main function to run all benchmarks"""
@@ -216,7 +218,7 @@ def main():
     print("  3. gRPC Server: docker-compose up python-grpc-service (port 50051)")
     print()
     print("Or start all services at once:")
-    print("  docker-compose up python-socket-service python-rest-service python-grpc-service")
+    print("  docker-compose up --build -d")
     print()
     
     input("Press Enter to start benchmarking...")

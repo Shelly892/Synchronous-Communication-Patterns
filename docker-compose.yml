@@ -4,17 +4,53 @@ services:
   # gRPC Service
   python-grpc-service:
     build: ./python-grpc-lab
+    image: grpc-lab:latest
+    container_name: grpc-lab-server
+    environment:
+      - RUN_MODE=server
     ports:
       - "50051:50051"
+    networks:
+      - lab-network
+    restart: unless-stopped
 
   # REST API Service
   python-rest-service:
     build: ./python-rest-lab
+    image: rest-api-lab:latest
+    container_name: rest-api-lab-server
     ports:
       - "5000:5000"
+    networks:
+      - lab-network
+    restart: unless-stopped
 
   # Socket Service
   python-socket-service:
     build: ./python-socket-lab
+    image: socket-lab:latest
+    container_name: socket-lab-server
+    environment:
+      - APP=server
     ports:
       - "8080:8080"
+    networks:
+      - lab-network
+    restart: unless-stopped
+
+  # benchmark container
+  benchmark:
+    build:
+      context: .
+      dockerfile: Dockerfile.benchmark
+    image: lab-benchmark:latest
+    container_name: lab-benchmark
+    network_mode: host
+    # No command - use default from Dockerfile (keeps container running)
+    profiles:
+      - benchmark
+
+networks:
+  lab-network:
+    driver: bridge
+    name: distributed-systems-network

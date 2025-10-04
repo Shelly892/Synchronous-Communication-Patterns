@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies for all services
+COPY python-rest-lab/requirements.txt ./rest-requirements.txt
+COPY python-grpc-lab/requirements.txt ./grpc-requirements.txt
+
+RUN pip install --no-cache-dir \
+    -r rest-requirements.txt \
+    -r grpc-requirements.txt
+
+# Copy gRPC generated files
+COPY python-grpc-lab/generated ./generated
+
+# Copy benchmark script
+COPY benchmark.py .
+
+# Default command - keep container running
+CMD ["tail", "-f", "/dev/null"]

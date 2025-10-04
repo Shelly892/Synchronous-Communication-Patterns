@@ -1,26 +1,18 @@
-# Distributed Systems Lab Report: Synchronous Communication Patterns
-
-**Course**: COMP 41720 Distributed Systems  
-**Lab**: Lab 1 - Synchronous Communication Patterns  
----
-
-## Table of Contents
+# Synchronous Communication Patterns
 
 1. [Project Overview](#project-overview)
-2. [Synchronous Communication Principles](#synchronous-communication-principles)
-3. [System Architecture](#system-architecture)
-4. [Implementation Approaches](#implementation-approaches)
-5. [Running Instructions](#running-instructions)
-6. [Test Results](#test-results)
-7. [Performance Comparison](#performance-comparison)
-8. [Conclusion](#conclusion)
-9. [References](#references)
+2. [Implementation Approaches](#implementation-approaches)
+3. [Running Instructions](#running-instructions)
+4. [Test Results](#test-results)
+5. [Performance Comparison](#performance-comparison)
+6. [Conclusion](#conclusion)
+7. [References](#references)
 
 ---
 
 ## Project Overview
 
-This lab implements three different synchronous communication patterns for client-server communication in distributed systems:
+This project implements three different synchronous communication patterns for client-server communication in distributed systems:
 
 - **Socket Communication**: Low-level network programming based on TCP
 - **REST API**: RESTful Web services based on HTTP
@@ -34,13 +26,12 @@ All implementations are written in Python and include comprehensive test suites 
 distributed-systems-lab/
 ├── python-socket-lab/          # Socket implementation
 │   ├── server.py               # Socket server
-│   ├── client.py               # Socket client
-│   ├── requirements.txt
+│   ├── client.py               # Socket client(including tests)
 │   └── Dockerfile
 ├── python-rest-lab/            # REST API implementation
 │   ├── app.py                  # Flask application
 │   ├── models.py               # Data models
-│   ├── simple_client.py        # REST client
+│   ├── client.py               # REST client(including tests)
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── python-grpc-lab/            # gRPC implementation
@@ -48,32 +39,20 @@ distributed-systems-lab/
 │   │   └── user_service.proto  # Interface definition
 │   ├── generated/              # Auto-generated code
 │   ├── server.py               # gRPC server
-│   ├── client.py               # gRPC client
-│   ├── generate_proto.py       # Code generation script
+│   ├── client.py               # gRPC client(including tests)
 │   ├── requirements.txt
 │   └── Dockerfile
-├── test_socket.py              # Socket tests
-├── test_rest.py                # REST tests
-├── test_grpc.py                # gRPC tests
 ├── benchmark.py                # Performance comparison
-├── run_all_tests.py            # Unified test runner
+├── Dockerfile.benchmark        # dockerfile
 ├── docker-compose.yml          # Docker orchestration
 └── README.md                   # This document
 ```
 
 ---
 
-## Synchronous Communication Principles
+## Implementation Approaches
 
-### What is Synchronous Communication?
-
-Synchronous communication is a communication pattern where the client must wait for the server's response after sending a request before continuing execution. Characteristics include:
-
-- **Blocking Wait**: The client blocks after sending a request until receiving a response
-- **Request-Response Pattern**: Each request corresponds to one response
-- **Sequential Execution**: Operations complete in order, making debugging easier
-
-### Implementation Principle
+This project uses classic client-server architecture, with all three implementations following the same pattern:
 
 ```
 Client                          Server
@@ -86,61 +65,12 @@ Client                          Server
   | 4. Continue Execution         |
 ```
 
-### Why Use Synchronous Communication?
-
-**Advantages:**
-- Simple logic, easy to understand and implement
-- Intuitive error handling
-- Simple state management
-
-**Disadvantages:**
-- Performance affected by network latency
-- Cannot handle multiple requests concurrently
-- May lead to resource idling
-
----
-
-## System Architecture
-
-### Overall Architecture
-
-This project uses classic client-server architecture, with all three implementations following the same pattern:
-
-```
-┌─────────────┐          ┌─────────────┐
-│   Client    │  Request │   Server    │
-│             │ -------> │             │
-│             │          │             │
-│             │ Response │  ┌────────┐ │
-│             │ <------- │  │Business│ │
-│             │          │  │ Logic  │ │
-└─────────────┘          │  └────────┘ │
-                         │  ┌────────┐ │
-                         │  │  Data  │ │
-                         │  │Storage │ │
-                         │  └────────┘ │
-                         └─────────────┘
-```
-
-### User Management System Features
-
-All three implementations provide the same user management functionality:
-
-- Create User (Create)
-- Get User (Read)
-- Update User (Update)
-- Delete User (Delete)
-- Search Users (Search)
-
----
-
-## Implementation Approaches
-
 ### 1. Socket Implementation
 
 **Tech Stack**: Python socket library + TCP protocol
 
 **Features:**
+
 - Raw TCP Socket communication
 - Custom JSON message format
 - Multi-threaded concurrent connection handling
@@ -166,6 +96,7 @@ response = sock.recv(1024)  # Blocking wait for response
 ```
 
 **Synchronous Characteristics:**
+
 - `accept()` - Blocks waiting for client connection
 - `recv()` - Blocks waiting for data reception
 - `send()` - Synchronous data transmission
@@ -175,14 +106,15 @@ response = sock.recv(1024)  # Blocking wait for response
 **Tech Stack**: Flask + HTTP/1.1 + JSON
 
 **Features:**
+
 - Standard HTTP protocol
 - RESTful URL design
 - JSON data exchange format
 
 **API Interface Design:**
 
-| Method | Path                    | Description       |
-|--------|------------------------|-------------------|
+| Method | Path                   | Description       |
+| ------ | ---------------------- | ----------------- |
 | GET    | /api/users             | Get all users     |
 | GET    | /api/users/{id}        | Get specific user |
 | POST   | /api/users             | Create new user   |
@@ -196,7 +128,6 @@ response = sock.recv(1024)  # Blocking wait for response
 # Server side
 @app.route('/api/users', methods=['GET'])
 def get_users():
-    time.sleep(0.1)  # Simulate database query
     users = user_manager.get_all_users()
     return jsonify({'status': 'success', 'data': users})
 
@@ -206,6 +137,7 @@ data = response.json()  # Parse response
 ```
 
 **Synchronous Characteristics:**
+
 - HTTP request-response is naturally synchronous
 - `requests.get()` blocks waiting for server response
 - Server returns result only after processing completes
@@ -215,6 +147,7 @@ data = response.json()  # Parse response
 **Tech Stack**: gRPC + HTTP/2 + Protocol Buffers
 
 **Features:**
+
 - Interface definition using Protocol Buffers
 - Binary serialization for excellent performance
 - Strong type checking with compile-time validation
@@ -229,7 +162,6 @@ service UserService {
     rpc CreateUser (CreateUserRequest) returns (UserResponse);
     rpc UpdateUser (UpdateUserRequest) returns (UserResponse);
     rpc DeleteUser (UserRequest) returns (DeleteResponse);
-    rpc SearchUsers (SearchRequest) returns (UserList);
 }
 ```
 
@@ -238,20 +170,20 @@ service UserService {
 ```python
 # Server side
 class UserServiceImpl(user_service_pb2_grpc.UserServiceServicer):
-    def GetAllUsers(self, request, context):
-        time.sleep(0.1)  # Simulate processing
-        users = self.get_users_from_db()
-        return user_service_pb2.UserList(success=True, users=users)
+    def GetUser(self, request, context):
+        user = user_service_pb2.User(id,name,email,created_at)
+        return user_service_pb2.UserResponse(success=True, user=user)
 
 # Client side
 channel = grpc.insecure_channel('localhost:50051')
 stub = user_service_pb2_grpc.UserServiceStub(channel)
-response = stub.GetAllUsers(Empty())  # Synchronous call
+response = stub.GetUser(id)  # Synchronous call
 ```
 
 **Synchronous Characteristics:**
+
 - gRPC uses synchronous calls by default
-- `stub.GetAllUsers()` blocks waiting for response
+- `stub.GetUser()` blocks waiting for response
 - Client continues only after server method returns result
 
 ---
@@ -267,10 +199,6 @@ response = stub.GetAllUsers(Empty())  # Synchronous call
 ### Install Dependencies
 
 ```bash
-# Socket implementation
-cd python-socket-lab
-pip install -r requirements.txt
-
 # REST implementation
 cd python-rest-lab
 pip install -r requirements.txt
@@ -278,12 +206,19 @@ pip install -r requirements.txt
 # gRPC implementation
 cd python-grpc-lab
 pip install -r requirements.txt
-python generate_proto.py  # Generate protobuf code
 ```
 
 ### Start Services
 
-**Method 1: Manual Start (Recommended for development and testing)**
+**Method 1: Using Docker Compose(Recommended)**
+Start all three services (Socket, REST, gRPC) in the background with a single command.
+
+```bash
+docker-compose up --build -d
+```
+
+**Method 2: Manual Start**
+Manually start each service in a separate terminal
 
 ```bash
 # Terminal 1 - Socket server
@@ -299,23 +234,62 @@ cd python-grpc-lab
 python server.py
 ```
 
-**Method 2: Using Docker Compose**
+### Run Client Tests
+
+**Method 1: Using Docker(Recommended)**
+Run the client side as a container to interact with its corresponding server.
+(**The testing and validation part is included as an option in the program**)
 
 ```bash
-docker-compose up
+# Socket client
+docker run -it --rm -e APP=client --network="host" socket-lab:latest
+# REST client
+docker run -it --rm -e RUN_MODE=client --network="host" rest-api-lab:latest
+# gRPC client
+docker run -it --rm -e RUN_MODE=client --network="host" grpc-lab:latest
 ```
 
-### Run Client Tests
+**Method 2: Manual Start**
+Run the client scripts directly on the host machine, connecting to the servers already running.
 
 ```bash
 # Socket client
 python python-socket-lab/client.py
-
 # REST client
-python python-rest-lab/simple_client.py
-
+python python-rest-lab/client.py
 # gRPC client
 python python-grpc-lab/client.py
+```
+
+### Run Performance Benchmark
+
+**Method 1: Docker Container (Recommended)**
+Run benchmark in a dedicated container that connects to running services
+
+```bash
+# Start all services first
+# skip this step if the services already running in background
+docker-compose up -d
+
+# Build and start the benchmark container
+docker-compose --profile benchmark up -d benchmark
+
+# Run benchmark inside the container
+docker exec -it lab-benchmark python benchmark.py
+
+# Clean up benchmark container when done
+docker-compose down benchmark
+```
+
+**Method 2: Local Execution**
+Run benchmark script directly on your host machine
+
+```bash
+# Ensure all services are running first
+docker-compose up -d
+
+# Run benchmark locally
+python benchmark.py
 ```
 
 ---
@@ -338,26 +312,54 @@ Comprehensive test cases were written for each implementation to verify:
 Socket Implementation Test Suite
 ==================================================
 
-[Test 1] Connection Establishment Test
-✅ Connection successfully established
+[Test 1] Connection establishment test
+Connection successfully established
 
-[Test 2] Message Send/Receive Test
-Send: Hello Socket Server
-Receive: {"status":"success","result":"HELLO SOCKET SERVER",...}
-✅ Message send/receive successful
+[Test 2] Message send/receiving test
+Sent: Hello Socket Server
+Received: HELLO SOCKET SERVER
+Message sending/receiving successful
 
-[Test 3] JSON Message Test
-✅ JSON processing correct
+[Test 3] Uppercase conversion test
+  Sub-test 1: 'test message'
+Sent: test message
+Received: TEST MESSAGE
+Uppercase conversion test passed
+
+  Sub-test 2: 'hello world'
+Sent: hello world
+Received: HELLO WORLD
+Uppercase conversion test passed
+
+  Sub-test 3: '12345'
+Sent: 12345
+Received: 12345
+Uppercase conversion test passed
+
+  Sub-test 4: 'mixed CASE text'
+Sent: mixed CASE text
+Received: MIXED CASE TEXT
+Uppercase conversion test passed
+
+  Sub-test 5: 'PyThOn SoCkEt'
+Sent: PyThOn SoCkEt
+Received: PYTHON SOCKET
+Uppercase conversion test passed
+
+All uppercase conversion tests passed
 
 [Test 4] Error Handling Test - Invalid Connection
-✅ Correctly handled connection refused
+  Sub-test 1: Wrong port connection
+Correctly handled connection timeout
+  Sub-test 2: Wrong host connection
+Correctly handled OSError: [Errno 11001] getaddrinfo failed
 
 [Test 5] Multiple Requests Test
 Successful requests: 5/5
-✅ Multiple requests test passed
+Multiple requests test passed
 
 ==================================================
-Test Results: 5/5 Passed (100%)
+Test Results: 5/5 Passed
 ==================================================
 ```
 
@@ -373,37 +375,43 @@ REST API Test Suite
 [Test 1] CREATE - Create User
 Request: POST /api/users
 Status Code: 201
-✅ CREATE test passed
+CREATE test passed
 
 [Test 2] READ - Read Users
 Request: GET /api/users
 Retrieved 4 users
-✅ READ test passed
+READ test passed
+
+Request: GET /api/users/b28ef30c-4627-4d27-90fa-6eff99fefcaf
+Status code: 200
+User info: Test User (testuser@example.com)
+READ test passed
 
 [Test 3] UPDATE - Update User
 Status Code: 200
-✅ UPDATE test passed
+UPDATE test passed
 
 [Test 4] DELETE - Delete User
+Request: DELETE /api/users/b28ef30c-4627-4d27-90fa-6eff99fefcaf
 Status Code: 200
-✅ DELETE test passed
+DELETE test passed
 
 [Test 5] HTTP Status Code Validation
-404 test: ✓ Passed
-400 test: ✓ Passed
-200 test: ✓ Passed
-✅ HTTP status code validation passed
+GET non-existent user: 404
+POST empty data: 400
+POST invalid email: 400
+GET search without query: 400
+GET all users: 200
+
+Status code tests: 5/5 passed
+HTTP status code validation passed
 
 [Test 6] Request/Response Format Validation
 Response Content-Type: application/json
-✅ Request/response format validation passed
-
-[Test 7] Search Functionality Test
-Found 1 user
-✅ Search functionality test passed
+Request/response format validation passed
 
 ==================================================
-Test Results: 7/7 Passed (100%)
+Test Results: 6/6 Passed
 ==================================================
 ```
 
@@ -418,35 +426,33 @@ gRPC Test Suite
 
 [Test 1] Service Method Invocation Test
 Call: GetAllUsers()
-Users returned: 3
-✅ Service method invocation successful
+Returned user count: 2
+Success status: True
+Service method invocation successful
 
-[Test 2] Create User Test
-✅ Create user successful
+[Test 2] Data Serialization/Deserialization Test
+Sent data:
+  name: Serialization Test User
+  email: serialization1759526723@test.com
 
-[Test 3] Get User Test
-✅ Get user successful
+Received data:
+  id: 5
+  name: Serialization Test User
+  email: serialization1759526723@test.com
+  created_at: 2025-10-03 21:25:23
+Data serialization/deserialization correct
 
-[Test 4] Update User Test
-✅ Update user successful
+[Test 3] Error Handling Test
+✓ Correctly handled NOT_FOUND error: User with ID nonexistent-id not found
+✓ Correctly handled INVALID_ARGUMENT error: Name and email are required
+✓ Correctly handled invalid email format: Invalid email format
+✓ Correctly handled duplicate email error: Email already exists
 
-[Test 5] Delete User Test
-✅ Delete user successful
-
-[Test 6] Data Serialization/Deserialization Test
-✅ Data serialization/deserialization correct
-
-[Test 7] Error Handling Test
-✓ Correctly handled NOT_FOUND error
-✓ Correctly handled INVALID_ARGUMENT error
-✓ Correctly handled email format error
-✅ Error handling test passed
-
-[Test 8] Search Functionality Test
-✅ Search functionality test passed
-
+Error handling tests: 4/4 passed
+Error handling test passed
+Cleaned up test user: 5
 ==================================================
-Test Results: 8/8 Passed (100%)
+Test Results: 3/3 Passed
 ==================================================
 ```
 
@@ -459,118 +465,128 @@ Test Results: 8/8 Passed (100%)
 ### Test Environment
 
 - **Hardware**: Local development environment
-- **Operating System**: macOS/Windows/Linux
+- **Operating System**: Windows
 - **Test Method**: Each method runs 50 identical operations, measuring response time
 
 ### Performance Test Results
 
 ```
 ==================================================
+Socket Performance Test (50 iterations)
+==================================================
+Completed: 10/50
+Completed: 20/50
+Completed: 30/50
+Completed: 40/50
+Completed: 50/50
+
+Socket Results:
+  Average response time: 2.10ms
+  Min: 1.00ms
+  Max: 10.07ms
+  Standard deviation: 1.22ms
+  Errors: 0
+
+==================================================
+REST API Performance Test (50 iterations)
+==================================================
+Completed: 10/50
+Completed: 20/50
+Completed: 30/50
+Completed: 40/50
+Completed: 50/50
+
+REST Results:
+  Average response time: 4.65ms
+  Min: 3.00ms
+  Max: 11.01ms
+  Standard deviation: 1.18ms
+  Errors: 0
+
+==================================================
+gRPC Performance Test (50 iterations)
+==================================================
+Completed: 10/50
+Completed: 20/50
+Completed: 30/50
+Completed: 40/50
+Completed: 50/50
+
+gRPC Results:
+  Average response time: 1.27ms
+  Min: 0.00ms
+  Max: 10.85ms
+  Standard deviation: 1.46ms
+  Errors: 0
+
+==================================================
 Performance Comparison Summary
 ==================================================
 
-1. Response Time Comparison
-------------------------------------------------------------
-Method      Average       Minimum       Maximum       Std Dev
-------------------------------------------------------------
-Socket      6.23ms       4.51ms        12.34ms       1.87ms
-gRPC        18.45ms      15.23ms       25.67ms       2.34ms
-REST        125.67ms     105.34ms      156.23ms      15.23ms
-
-2. Relative Performance (Socket as baseline = 1.0x)
-------------------------------------------------------------
-Socket      1.00x (fastest)
-gRPC        2.96x (196% slower)
-REST        20.17x (1917% slower)
-
-3. Data Transfer Size Comparison
-------------------------------------------------------------
-Socket      65 bytes      (Custom format)
-gRPC        156 bytes     (Protobuf binary)
-REST        324 bytes     (JSON text)
-
-4. Reliability (Error Rate)
-------------------------------------------------------------
-Socket      0 errors (0.0% error rate)
-gRPC        0 errors (0.0% error rate)
-REST        0 errors (0.0% error rate)
-
-5. Comprehensive Score
-------------------------------------------------------------
-Scoring criteria: Speed(40%) + Reliability(30%) + Data Efficiency(30%)
-
-1. Socket     Total: 0.523 (Best)
-2. gRPC       Total: 0.687
-3. REST       Total: 1.245
+Ranking (by average response time):
+----------------------------------------
+1. gRPC           1.27ms (fastest)
+2. Socket         2.10ms (65% slower)
+3. REST           4.65ms (265% slower)
 ```
 
 ### Performance Analysis
 
 #### Socket - Fastest
 
-**Why fastest?**
-- No protocol layer overhead
-- Direct TCP connection
-- Minimal data encapsulation
+**Performance Characteristics**
+
+- Direct TCP connection without additional protocol overhead.
+- Minimal data encapsulation, resulting in the lowest latency.
+- No intermediate layers such as HTTP headers or serialization frameworks.
 
 **Use Cases:**
-- Latency-sensitive applications
-- Custom protocol requirements
-- High-performance game servers
+
+- Latency-sensitive applications (e.g., real-time trading, live streaming).
+- Custom communication protocols where developers want full control.
+- High-performance game servers and real-time multiplayer environments.
 
 #### gRPC - Balanced
 
-**Why faster than REST?**
-- HTTP/2 multiplexing
+**Performance Characteristics**
+
+- HTTP/2 multiplexing: multiple requests share the same connection.
 - Protocol Buffers binary serialization
 - Connection reuse (no need to establish connection each time)
-- Header compression
+- Header compression reduces network overhead
 
 **Use Cases:**
-- Internal microservice communication
-- Systems requiring strong type guarantees
-- Cross-language service invocation
+
+- Internal microservice communication in cloud-native systems.
+- Systems with high throughput and structured data, e.g., large-scale distributed platforms.
+- Cross-language service invocation, ensuring strong type safety.
 
 #### REST - Slowest but Most Universal
 
-**Why slowest?**
-- Large HTTP/1.1 protocol overhead
-- Slow JSON text serialization
-- May establish new connection per request
-- Human-readable format (occupies more space)
+**Performance Characteristic**
+
+- Typically runs on HTTP/1.1, incurring more overhead.
+- Human-readable format (JSON/XML), larger message size.
+- Often creates new TCP connections per request (unless HTTP keep-alive is used).
 
 **Use Cases:**
-- Public Web APIs
-- Direct browser access required
-- Integration with third-party systems
 
-### Visualization Comparison
-
-```
-Response Time Comparison (shorter is better):
-Socket ▓░░░░░░░░░░░░░░░░░░░  6.23ms
-gRPC   ▓▓▓░░░░░░░░░░░░░░░░░  18.45ms
-REST   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  125.67ms
-
-Data Size Comparison (smaller is better):
-Socket ▓▓░░░░░░░░░░░░░░░░░░  65 bytes
-gRPC   ▓▓▓▓▓░░░░░░░░░░░░░░  156 bytes
-REST   ▓▓▓▓▓▓▓▓▓▓░░░░░░░░  324 bytes
-```
+- Public Web APIs where accessibility and readability are critical.
+- Browser-based clients (native support for HTTP/JSON).
+- Third-party system integration, since REST is widely adopted and supported by virtually all platforms.
 
 ---
 
 ## Conclusion
 
-### Implementation and Verification of Synchronous Communication
+This project successfully implemented three different levels of synchronous communication patterns:
 
-This lab successfully implemented three different levels of synchronous communication patterns:
-
-1. **Socket**: Demonstrated the most low-level synchronous communication mechanism
-2. **REST API**: Demonstrated synchronous characteristics of standard HTTP protocol
-3. **gRPC**: Demonstrated synchronous invocation of modern RPC framework
+- Socket offers the highest performance, but requires custom protocol design and is less interoperable.
+- gRPC provides a balance between performance and usability, suitable for modern distributed microservices.
+- REST is the slowest, but wins in universality and compatibility, making it the de facto standard for public APIs.
 
 All implementations correctly embody the core characteristics of synchronous communication:
+
 - Client blocks waiting after sending request
 - Server returns response after processing completes
 - Client continues execution after receiving response
@@ -579,90 +595,32 @@ All implementations correctly embody the core characteristics of synchronous com
 
 Based on performance testing and actual application scenarios:
 
-| Scenario | Recommended Solution | Reason |
-|----------|---------------------|--------|
-| Internal microservice communication | gRPC | High performance + Type safety |
-| Public Web API | REST | Standardization + Easy integration |
-| Real-time gaming/trading systems | Socket | Lowest latency |
-| Mobile app backend | REST or gRPC | Depends on performance requirements |
-| IoT device communication | Socket or gRPC | Resource-constrained environments |
-
-### Learning Outcomes
-
-Through this lab, gained deep understanding of:
-
-1. **Nature of Synchronous Communication**: Request-response pattern is fundamental to distributed systems
-2. **Protocol Layers**: Evolution from TCP to HTTP to gRPC
-3. **Performance Trade-offs**: Balance between performance, usability, and standardization
-4. **Engineering Practices**: Complete testing and performance evaluation methods
-
-### Future Improvement Directions
-
-1. **Asynchronous Communication**: Implement asynchronous version to compare with synchronous approach
-2. **Load Testing**: Test performance under high concurrency scenarios
-3. **Security**: Add TLS/SSL encryption and authentication
-4. **Fault Tolerance**: Implement retry, timeout mechanisms
-5. **Service Discovery**: Integrate service registration and discovery
+| Scenario                            | Recommended Solution | Reason                              |
+| ----------------------------------- | -------------------- | ----------------------------------- |
+| Internal microservice communication | gRPC                 | High performance + Type safety      |
+| Public Web API                      | REST                 | Standardization + Easy integration  |
+| Real-time gaming/trading systems    | Socket               | Lowest latency                      |
+| Mobile app backend                  | REST or gRPC         | Depends on performance requirements |
+| IoT device communication            | Socket or gRPC       | Resource-constrained environments   |
 
 ---
 
 ## References
 
-### Official Documentation
+#### Official Documentation
 
 - [Python Socket Programming](https://docs.python.org/3/library/socket.html)
 - [Flask RESTful API](https://flask.palletsprojects.com/)
 - [gRPC Python](https://grpc.io/docs/languages/python/)
 - [Protocol Buffers](https://developers.google.com/protocol-buffers)
 
-### Technical Articles
+#### Technical Articles
 
 - [REST API Design Best Practices](https://restfulapi.net/)
 - [gRPC vs REST Performance Comparison](https://grpc.io/blog/grpc-web-ga/)
 - [HTTP/2 Protocol Features](https://http2.github.io/)
 
-### Related Course Materials
+#### Related Course Materials
 
 - COMP 41720 Distributed Systems Course Notes
 - Lab 1: Synchronous Communication Patterns
-
----
-
-## Appendix
-
-### Dependency Versions
-
-```
-# Socket implementation
-Python 3.9+
-
-# REST implementation
-Flask==2.3.3
-requests==2.31.0
-
-# gRPC implementation
-grpcio==1.60.0
-grpcio-tools==1.60.0
-protobuf==4.25.1
-```
-
-### Code Statistics
-
-```
-Total Lines of Code: ~2,500 lines
-- Socket implementation: ~500 lines
-- REST implementation: ~600 lines
-- gRPC implementation: ~700 lines
-- Test code: ~700 lines
-```
-
-### Contributors
-
-- Student Name: [Your Name]
-- Student ID: [Your ID]
-- Email: [Your Email]
-
----
-
-**Lab Completion Date**: [Date]  
-**Submission Date**: [Date]
